@@ -3,20 +3,30 @@ import pickle
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
-print("Loading embedding model...")
-model = SentenceTransformer("all-MiniLM-L6-v2")
+model = None
+index = None
+assessments = None
 
-print("Loading FAISS index...")
-index = faiss.read_index("vector_db/shl.index")
 
-with open("vector_db/documents.pkl", "rb") as f:
-    assessments = pickle.load(f)
+def load_resources():
+    global model, index, assessments
+
+    if model is None:
+        print("Loading embedding model...")
+        model = SentenceTransformer("all-MiniLM-L6-v2")
+
+    if index is None:
+        print("Loading FAISS index...")
+        index = faiss.read_index("vector_db/shl.index")
+
+    if assessments is None:
+        print("Loading assessment database...")
+        with open("vector_db/documents.pkl", "rb") as f:
+            assessments = pickle.load(f)
 
 
 def search(query, k=5):
-    """
-    Search the FAISS index and return the top-k matching assessments.
-    """
+    load_resources()
 
     query_embedding = model.encode(
         [query],
@@ -33,7 +43,6 @@ def search(query, k=5):
             continue
 
         item = assessments[idx].copy()
-
         item["score"] = float(score)
 
         results.append(item)
@@ -41,30 +50,16 @@ def search(query, k=5):
     return results
 
 
-# -------------------------------------------------------
-# Run this block ONLY when retriever.py is executed directly
-# -------------------------------------------------------
-
 if __name__ == "__main__":
 
     while True:
 
-        query = input("\nEnter hiring requirement (or 'exit'): ")
+        query = input("Query: ")
 
         if query.lower() == "exit":
             break
 
         results = search(query)
 
-        print("\nTop Recommendations\n")
-
-        for i, item in enumerate(results, start=1):
-
-            print("=" * 60)
-            print(f"{i}. {item['name']}")
-            print(f"Score      : {item['score']:.4f}")
-            print(f"Duration   : {item.get('duration', '-')}")
-            print(f"Remote     : {item.get('remote', '-')}")
-            print(f"Adaptive   : {item.get('adaptive', '-')}")
-            print(item.get("description", ""))
-            print(item["link"])
+        for r in results:
+            print(r["name"])

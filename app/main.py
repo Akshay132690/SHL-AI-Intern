@@ -10,7 +10,8 @@ app = FastAPI(
     version="1.0"
 )
 
-agent = SHLAgent()
+# Lazy initialization
+agent = None
 
 
 class Message(BaseModel):
@@ -29,9 +30,6 @@ def home():
     }
 
 
-# ----------------------------
-# Health Check (Required by SHL)
-# ----------------------------
 @app.get("/health")
 def health():
     return {
@@ -40,11 +38,15 @@ def health():
     }
 
 
-# ----------------------------
-# Chat Endpoint
-# ----------------------------
 @app.post("/chat")
 def chat(request: ChatRequest):
+
+    global agent
+
+    # Create the agent only when the first request arrives
+    if agent is None:
+        print("Initializing SHL Agent...")
+        agent = SHLAgent()
 
     messages = [
         {
@@ -54,6 +56,4 @@ def chat(request: ChatRequest):
         for m in request.messages
     ]
 
-    response = agent.chat(messages)
-
-    return response
+    return agent.chat(messages)
