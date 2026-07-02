@@ -26,8 +26,9 @@ def get_model():
 def ask_gemini(prompt):
 
     try:
-
+        print("Calling Gemini...")
         response = get_model().generate_content(prompt)
+        print("Gemini returned.")
 
         text = response.text.strip()
 

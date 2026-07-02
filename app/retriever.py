@@ -1,4 +1,8 @@
 import os
+
+os.environ["HF_HOME"] = "/tmp/huggingface"
+os.environ["TRANSFORMERS_CACHE"] = "/tmp/huggingface"
+
 import pickle
 import faiss
 import numpy as np
@@ -13,8 +17,9 @@ def _load():
     global _model, _index, _assessments
 
     if _model is None:
-        print("Loading embedding model...")
+        print("Loading SentenceTransformer...")
         _model = SentenceTransformer("all-MiniLM-L6-v2")
+        print("SentenceTransformer loaded.")
 
     if _index is None:
         print("Loading FAISS index...")
@@ -22,7 +27,9 @@ def _load():
 
         index_path = os.path.join(base, "vector_db", "shl.index")
 
+        print("Loading FAISS...")
         _index = faiss.read_index(index_path)
+        print("FAISS loaded.")
 
     if _assessments is None:
         print("Loading assessment database...")
@@ -31,8 +38,10 @@ def _load():
 
         docs_path = os.path.join(base, "vector_db", "documents.pkl")
 
+        print("Loading documents...")
         with open(docs_path, "rb") as f:
             _assessments = pickle.load(f)
+        print("Documents loaded.")
 
 
 def search(query, k=5):
