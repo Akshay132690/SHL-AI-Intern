@@ -1,16 +1,8 @@
-print("STEP 1")
-
 from fastapi import FastAPI
-print("STEP 2")
-
 from pydantic import BaseModel
-print("STEP 3")
-
 from typing import List
-print("STEP 4")
 
 from app.agent import SHLAgent
-print("STEP 5")
 
 app = FastAPI(
     title="SHL Assessment Recommendation API",
