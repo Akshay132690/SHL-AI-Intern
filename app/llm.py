@@ -5,11 +5,18 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-genai.configure(
-    api_key=os.getenv("GEMINI_API_KEY")
-)
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-model = genai.GenerativeModel("gemini-2.5-flash")
+_model = None
+
+
+def get_model():
+    global _model
+
+    if _model is None:
+        _model = genai.GenerativeModel("gemini-2.5-flash")
+
+    return _model
 
 
 # ---------------------------------------------------------
@@ -20,7 +27,7 @@ def ask_gemini(prompt):
 
     try:
 
-        response = model.generate_content(prompt)
+        response = get_model().generate_content(prompt)
 
         text = response.text.strip()
 

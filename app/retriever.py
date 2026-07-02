@@ -1,39 +1,50 @@
-import faiss
+import os
 import pickle
+import faiss
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
-model = None
-index = None
-assessments = None
+_model = None
+_index = None
+_assessments = None
 
 
-def load_resources():
-    global model, index, assessments
+def _load():
+    global _model, _index, _assessments
 
-    if model is None:
+    if _model is None:
         print("Loading embedding model...")
-        model = SentenceTransformer("all-MiniLM-L6-v2")
+        _model = SentenceTransformer("all-MiniLM-L6-v2")
 
-    if index is None:
+    if _index is None:
         print("Loading FAISS index...")
-        index = faiss.read_index("vector_db/shl.index")
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-    if assessments is None:
+        index_path = os.path.join(base, "vector_db", "shl.index")
+
+        _index = faiss.read_index(index_path)
+
+    if _assessments is None:
         print("Loading assessment database...")
-        with open("vector_db/documents.pkl", "rb") as f:
-            assessments = pickle.load(f)
+
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+        docs_path = os.path.join(base, "vector_db", "documents.pkl")
+
+        with open(docs_path, "rb") as f:
+            _assessments = pickle.load(f)
 
 
 def search(query, k=5):
-    load_resources()
 
-    query_embedding = model.encode(
+    _load()
+
+    embedding = _model.encode(
         [query],
         convert_to_numpy=True
     ).astype(np.float32)
 
-    distances, indices = index.search(query_embedding, k)
+    distances, indices = _index.search(embedding, k)
 
     results = []
 
@@ -42,7 +53,8 @@ def search(query, k=5):
         if idx == -1:
             continue
 
-        item = assessments[idx].copy()
+        item = _assessments[idx].copy()
+
         item["score"] = float(score)
 
         results.append(item)
@@ -54,12 +66,12 @@ if __name__ == "__main__":
 
     while True:
 
-        query = input("Query: ")
+        q = input("Query: ")
 
-        if query.lower() == "exit":
+        if q.lower() == "exit":
             break
 
-        results = search(query)
+        res = search(q)
 
-        for r in results:
-            print(r["name"])
+        for r in res:
+            print(r["name"], r["score"])

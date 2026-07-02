@@ -1,11 +1,13 @@
 from fastapi import FastAPI
 
+print("STEP 1")
+
+from app.agent import SHLAgent
+
+print("STEP 2")
+
 app = FastAPI()
 
 @app.get("/")
 def root():
-    return {"message": "Hello"}
-
-@app.get("/health")
-def health():
-    return {"status": "healthy"}
+    return {"status": "ok"}
